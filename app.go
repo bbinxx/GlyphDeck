@@ -11,7 +11,8 @@ import (
 
 // App struct
 type App struct {
-	ctx context.Context
+	ctx      context.Context
+	favStore *FavoritesStore
 }
 
 // FontInfo holds font name and its detected category
@@ -22,7 +23,9 @@ type FontInfo struct {
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	return &App{
+		favStore: NewFavoritesStore(),
+	}
 }
 
 // startup is called when the app starts
