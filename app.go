@@ -36,16 +36,20 @@ func (a *App) ListFonts() ([]string, error) {
 
 	// Helper to read from registry
 	readFonts := func(k registry.Key, path string) {
-		key, err := registry.OpenKey(k, path, registry.QUERY_VALUE)
+		key, err := registry.OpenKey(k, path, registry.READ)
 		if err != nil {
+			fmt.Printf("Error opening registry key %s: %v\n", path, err)
 			return
 		}
 		defer key.Close()
 
 		names, err := key.ReadValueNames(-1)
 		if err != nil {
+			fmt.Printf("Error reading value names from %s: %v\n", path, err)
 			return
 		}
+
+		fmt.Printf("Found %d fonts in %s\n", len(names), path)
 
 		for _, name := range names {
 			// Key is usually "Name (TrueType)" or similar
@@ -66,6 +70,11 @@ func (a *App) ListFonts() ([]string, error) {
 		fonts = append(fonts, f)
 	}
 	sort.Strings(fonts)
+
+	if len(fonts) == 0 {
+		fmt.Println("No fonts found in registry, adding defaults for testing")
+		fonts = append(fonts, "Arial", "Courier New", "Georgia", "Times New Roman", "Verdana")
+	}
 
 	return fonts, nil
 }

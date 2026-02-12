@@ -1,17 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './App.css';
-
-// Fallback for calling backend method directly if bindings aren't fully generated yet
-// In a real scenario, you usually import from "../wailsjs/go/main/App"
-const ListFonts = async (): Promise<string[]> => {
-    // Access the exposed Go method via standard Wails window object
-    if ((window as any).go && (window as any).go.main && (window as any).go.main.App && (window as any).go.main.App.ListFonts) {
-        return (window as any).go.main.App.ListFonts();
-    }
-    // If checking in standard browser or bindings missing
-    console.warn("Wails backend not detected or ListFonts not bound yet.");
-    return [];
-}
+import { ListFonts } from "../wailsjs/go/main/App";
 
 function App() {
     const [fonts, setFonts] = useState<string[]>([]);
@@ -19,86 +8,118 @@ function App() {
     const [fontSize, setFontSize] = useState(32);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Fetch fonts on mount
-        ListFonts().then((data: string[]) => {
-            if (data) {
-                // Filter duplicates if any
-                const uniqueFonts = Array.from(new Set(data));
-                setFonts(uniqueFonts);
-            }
-            setLoading(false);
-        }).catch(err => {
-            console.error("Failed to load fonts:", err);
-            setLoading(false);
-        });
+        ListFonts()
+            .then((data) => {
+                if (data && data.length > 0) {
+                    const uniqueFonts = Array.from(new Set(data));
+                    setFonts(uniqueFonts);
+                } else {
+                    setError("No fonts found on this system.");
+                }
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error("Failed to load fonts:", err);
+                setError("Failed to load fonts: " + String(err));
+                setLoading(false);
+            });
     }, []);
 
-    const filteredFonts = fonts.filter(font => 
-        font.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredFonts = useMemo(() => {
+        const term = searchTerm.toLowerCase();
+        return fonts.filter(font => font.toLowerCase().includes(term));
+    }, [fonts, searchTerm]);
 
     return (
         <div id="app">
             <header>
                 <div className="title-area">
-                    <h1>Font Manager</h1>
+                    <h1>GlyphDeck</h1>
+                    {!loading && !error && (
+                        <span className="font-count">
+                            {filteredFonts.length} / {fonts.length} fonts
+                        </span>
+                    )}
                 </div>
+
                 <div className="controls">
-                     <div className="input-group">
-                        <label htmlFor="search">Search Font</label>
-                        <input 
+                    <div className="input-group">
+                        <label htmlFor="search">Search</label>
+                        <input
                             id="search"
-                            type="text" 
-                            value={searchTerm} 
-                            onChange={(e) => setSearchTerm(e.target.value)} 
-                            placeholder="Search family..."
-                            style={{width: '200px'}}
+                            className="search-input"
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Filter by name..."
                         />
                     </div>
                     <div className="input-group">
                         <label htmlFor="preview">Preview Text</label>
-                        <input 
+                        <input
                             id="preview"
-                            type="text" 
-                            value={previewText} 
-                            onChange={(e) => setPreviewText(e.target.value)} 
-                            placeholder="Type preview text..."
+                            className="preview-input"
+                            type="text"
+                            value={previewText}
+                            onChange={(e) => setPreviewText(e.target.value)}
+                            placeholder="Type to preview..."
                         />
                     </div>
                     <div className="input-group">
                         <label htmlFor="size">Size: {fontSize}px</label>
-                        <input 
+                        <input
                             id="size"
-                            type="range" 
-                            min="12" 
-                            max="96" 
-                            value={fontSize} 
-                            onChange={(e) => setFontSize(parseInt(e.target.value))} 
+                            type="range"
+                            min="12"
+                            max="96"
+                            value={fontSize}
+                            onChange={(e) => setFontSize(Number(e.target.value))}
                         />
                     </div>
                 </div>
             </header>
+
             <main>
-                {loading ? (
-                    <div style={{textAlign: 'center', marginTop: '50px'}}>Scanning system fonts...</div>
-                ) : (
+                {loading && (
+                    <div className="status-message">
+                        <div className="spinner" />
+                        <span>Scanning system fonts...</span>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="status-message">
+                        <span className="error-text">{error}</span>
+                    </div>
+                )}
+
+                {!loading && !error && (
                     <div className="font-grid">
-                        {filteredFonts.length > 0 ? filteredFonts.map((font, idx) => (
-                            <div className="font-card" key={idx} title={font}>
-                                <div className="font-header">
-                                    <span className="font-name">{font}</span>
+                        {filteredFonts.length > 0 ? (
+                            filteredFonts.map((font) => (
+                                <div className="font-card" key={font} title={font}>
+                                    <div className="font-header">
+                                        <span className="font-name">{font}</span>
+                                    </div>
+                                    <div
+                                        className="font-preview"
+                                        style={{
+                                            fontFamily: `"${font}", sans-serif`,
+                                            fontSize: `${fontSize}px`,
+                                        }}
+                                    >
+                                        {previewText || font}
+                                    </div>
                                 </div>
-                                <div 
-                                    className="font-preview" 
-                                    style={{ fontFamily: font, fontSize: `${fontSize}px` }}
-                                >
-                                    {previewText || font}
-                                </div>
+                            ))
+                        ) : (
+                            <div className="empty-state">
+                                <span className="emoji">🔍</span>
+                                <span>No fonts matching "<strong>{searchTerm}</strong>"</span>
                             </div>
-                        )) : (
-                            <div style={{gridColumn: '1/-1', textAlign: 'center'}}>No fonts found matching "{searchTerm}"</div>
                         )}
                     </div>
                 )}
