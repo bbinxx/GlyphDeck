@@ -72,11 +72,27 @@ ManifestDPIAware true
 
 Name "${INFO_PRODUCTNAME}"
 OutFile "..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe" # Name of the installer's file.
-InstallDir "$PROGRAMFILES64\${INFO_COMPANYNAME}\${INFO_PRODUCTNAME}" # Default installing folder ($PROGRAMFILES is Program Files folder).
+InstallDir "$PROGRAMFILES64\${INFO_PRODUCTNAME}" # Default installing folder ($PROGRAMFILES is Program Files folder).
+InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINST_KEY_NAME}" "InstallLocation"
 ShowInstDetails show # This will always show the installation details.
 
 Function .onInit
    !insertmacro wails.checkArchitecture
+
+   # Check for previous installation and silently uninstall it
+   ReadRegStr $0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINST_KEY_NAME}" "UninstallString"
+   StrCmp $0 "" done_upgrade
+
+   MessageBox MB_OKCANCEL|MB_ICONINFORMATION \
+       "A previous version of ${INFO_PRODUCTNAME} is installed.$\n$\nIt will be updated to the latest version." \
+       IDOK do_upgrade
+   Abort
+
+   do_upgrade:
+       ExecWait '"$0" /S _?=$INSTDIR'
+       Delete "$0" ; Remove old uninstaller exe
+
+   done_upgrade:
 FunctionEnd
 
 Section
@@ -84,6 +100,8 @@ Section
 
     !insertmacro wails.webview2runtime
 
+    # Overwrite existing files
+    SetOverwrite on
     SetOutPath $INSTDIR
 
     !insertmacro wails.files
