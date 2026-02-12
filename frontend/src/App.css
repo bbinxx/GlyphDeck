@@ -1,0 +1,137 @@
+body {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    text-align: left;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    background-color: #252526;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #61dafb;
+}
+
+.controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+    color: #aaaaaa;
+}
+
+input[type="text"] {
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #3e3e3e;
+    background-color: #3e3e3e;
+    color: #fff;
+    width: 300px;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #61dafb;
+}
+
+input[type="range"] {
+    width: 150px;
+}
+
+main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+.font-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.font-card {
+    background-color: #2d2d2d;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: transform 0.2s, background-color 0.2s;
+    cursor: pointer;
+    border: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
+    height: 150px;
+}
+
+.font-card:hover {
+    background-color: #3d3d3d;
+    transform: translateY(-2px);
+    border-color: #61dafb;
+}
+
+.font-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.5rem;
+}
+
+.font-name {
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+.font-preview {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    text-align: center;
+    word-break: break-all;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3e3e3e;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
